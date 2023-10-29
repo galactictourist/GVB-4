@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "generate": "node src/generator/generator.js",
     "post-update": "echo \"codesandbox preview only, need an update\" && yarn upgrade --latest"
   },
   "dependencies": {
@@ -17,7 +18,18 @@
     "@mui/material": "latest",
     "next": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "async-sema": "^3.1.1",
+    "canvas": "^2.8.0",
+    "form-data": "^4.0.0",
+    "gif-encoder-2": "^1.0.5",
+    "node-fetch": "^2.6.6",
+    "puppeteer": "^13.4.1",
+    "puppeteer-extra": "^3.2.3",
+    "puppeteer-extra-plugin-adblocker": "^2.12.0",
+    "puppeteer-extra-plugin-stealth": "^2.9.0",
+    "sha1": "^1.1.1",
+    "yesno": "^0.3.1"
   },
   "devDependencies": {
     "@types/node": "latest",
