@@ -6,47 +6,26 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Layer from "@/components/Core/Layer";
 import Button from "@mui/material/Button";
-import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { rowStyle } from "../styles";
-import { styled } from "@mui/material/styles";
+import Note from "@/components/Core/Note";
+import {
+  VisuallyHiddenInput,
+  containerStyle,
+  contentStyle,
+  layerStyle,
+} from "./home.style";
 
-const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
-  height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  whiteSpace: 'nowrap',
-  width: 1,
-});
-
-const containerStyle = {
-  mt: 20,
-  display: "flex",
-  justifyContent: "center",
-};
-
-const contentStyle = {
-  gap: 3,
-  display: "flex",
-  flexDirection: "column",
-};
-
-const layerStyle = {
-  mt: 3,
-  mb: 3,
-};
-
-const btnRowStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
+const NOTES = {
+  COLLECTION: "Ensure the collection name is not already taken up on OpenSea.",
+  LAYERS:
+    "The above layers are ordered from botton to top. Each additional layer are layered on top of the existing layers.",
+  ZIP: "Zip file should contain folders named with the above layer names with images placed accordingly.",
 };
 
 export default function HomePage() {
+  const [collectionName, setCollectionName] = useState("");
+  const [collectionDesc, setCollectionDesc] = useState("");
   const [nftAmount, setNftAmount] = useState(0);
   const [layerNames, setLayerNames] = useState(["Background", ""]);
 
@@ -64,18 +43,43 @@ export default function HomePage() {
   return (
     <Box sx={containerStyle}>
       <Box sx={contentStyle}>
-        <Box sx={rowStyle}>
-          <Typography>Amount of NFT to generate:</Typography>
-          <TextField
-            sx={{ input: { textAlign: "center" } }}
-            id="standard-basic"
-            value={nftAmount}
-            variant="standard"
-            onChange={(e) => setNftAmount(+e.target.value)}
-          />
+        <Box>
+          <Typography variant="h6">Collection Details</Typography>
+          <Box sx={rowStyle}>
+            <Typography>Collection Name:</Typography>
+            <TextField
+              sx={{ input: { textAlign: "left", width: "300px" } }}
+              id="standard-basic"
+              value={collectionName}
+              variant="standard"
+              onChange={(e) => setCollectionName(e.target.value)}
+            />
+          </Box>
+          <Box sx={rowStyle}>
+            <Typography>Collection Description:</Typography>
+            <TextField
+              sx={{ input: { textAlign: "left", width: "300px" } }}
+              id="standard-basic"
+              value={collectionDesc}
+              variant="standard"
+              onChange={(e) => setCollectionDesc(e.target.value)}
+            />
+          </Box>
+          <Box sx={rowStyle}>
+            <Typography>Amount of NFT to generate:</Typography>
+            <TextField
+              sx={{ input: { textAlign: "center" } }}
+              id="standard-basic"
+              value={nftAmount}
+              variant="standard"
+              type="number"
+              onChange={(e) => setNftAmount(+e.target.value)}
+            />
+          </Box>
+          <Note description={NOTES.COLLECTION} />
         </Box>
         <Box sx={layerStyle}>
-          <Typography variant="h6">Layers</Typography>
+          <Typography variant="h6">Layers Naming</Typography>
           {layerNames.map((layerName, i) => (
             <Layer
               key={i}
@@ -84,19 +88,24 @@ export default function HomePage() {
               inputHandler={(e: any) => inputHandler(i, e.target.value)}
             />
           ))}
+          <Note description={NOTES.LAYERS} />
         </Box>
-        <Box sx={btnRowStyle}>
-          <Button variant="contained" onClick={addHandler}>
-            Add Layer
-          </Button>
-          <Button
-            component="label"
-            variant="contained"
-            startIcon={<CloudUploadIcon />}
-          >
-            Upload file
-            <VisuallyHiddenInput type="file" />
-          </Button>
+
+        <Box>
+          <Box sx={rowStyle}>
+            <Button variant="contained" onClick={addHandler}>
+              Add Layer
+            </Button>
+            <Button
+              component="label"
+              variant="contained"
+              startIcon={<CloudUploadIcon />}
+            >
+              Upload Zip
+              <VisuallyHiddenInput type="file" />
+            </Button>
+          </Box>
+          <Note description={NOTES.ZIP} />
         </Box>
         <Button variant="contained" onClick={addHandler}>
           Generate
