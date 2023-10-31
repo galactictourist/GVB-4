@@ -26,7 +26,7 @@ const NOTES = {
 export default function HomePage() {
   const [collectionName, setCollectionName] = useState("");
   const [collectionDesc, setCollectionDesc] = useState("");
-  const [nftAmount, setNftAmount] = useState(0);
+  const [nftAmount, setNftAmount] = useState("0");
   const [layerNames, setLayerNames] = useState(["Background", ""]);
 
   const inputHandler = (index: number, value: string) => {
@@ -39,6 +39,26 @@ export default function HomePage() {
     const layers = [...layerNames, ""];
     setLayerNames(layers);
   };
+
+  const onGenerateHandler = async () => {
+    const collectionDetails = {
+      namePrefix: collectionName,
+      description: collectionDesc
+    };
+
+    const layerConfigs = [{
+      growEditionSizeTo: +nftAmount,
+      layersOrder: layerNames.map(layer => ({name: layer}))
+    }]
+
+    const res = await fetch('http://localhost:4000/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({collectionDetails, layerConfigs}),
+    })
+  }
 
   return (
     <Box sx={containerStyle}>
@@ -73,7 +93,7 @@ export default function HomePage() {
               value={nftAmount}
               variant="standard"
               type="number"
-              onChange={(e) => setNftAmount(+e.target.value)}
+              onChange={(e) => setNftAmount(e.target.value)}
             />
           </Box>
           <Note description={NOTES.COLLECTION} />
@@ -107,7 +127,7 @@ export default function HomePage() {
           </Box>
           <Note description={NOTES.ZIP} />
         </Box>
-        <Button variant="contained" onClick={addHandler}>
+        <Button variant="contained" onClick={onGenerateHandler}>
           Generate
         </Button>
       </Box>

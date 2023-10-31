@@ -33,15 +33,15 @@ const HashlipsGiffer = require(`./modules/HashlipsGiffer.js`);
 
 let hashlipsGiffer = null;
 
-const buildSetup = () => {
-  if (fs.existsSync(buildDir)) {
-    fs.rmSync(buildDir, { recursive: true });
+const buildSetup = (path = buildDir) => {
+  if (fs.existsSync(path)) {
+    fs.rmSync(path, { recursive: true });
   }
-  fs.mkdirSync(buildDir);
-  fs.mkdirSync(`${buildDir}/json`);
-  fs.mkdirSync(`${buildDir}/images`);
+  fs.mkdirSync(path);
+  fs.mkdirSync(`${path}/json`);
+  fs.mkdirSync(`${path}/images`);
   if (gif.export) {
-    fs.mkdirSync(`${buildDir}/gifs`);
+    fs.mkdirSync(`${path}/gifs`);
   }
 };
 
@@ -125,11 +125,11 @@ const drawBackground = () => {
   ctx.fillRect(0, 0, format.width, format.height);
 };
 
-const addMetadata = (_dna, _edition) => {
+const addMetadata = (_dna, _edition, collectionDetails) => {
   let dateTime = Date.now();
   let tempMetadata = {
-    name: `${namePrefix} #${_edition}`,
-    description: description,
+    name: `${collectionDetails.namePrefix} #${_edition}`,
+    description: collectionDetails.description,
     file_url: `${baseUri}/${_edition}.png`,
     image: `${baseUri}/${_edition}.png`,
     attributes: attributesList,
@@ -330,14 +330,14 @@ function shuffle(array) {
   return array;
 }
 
-const startCreating = async () => {
+const startCreating = async (collectionDetails = {namePrefix, description}, layerConfigs = layerConfigurations) => {
   let layerConfigIndex = 0;
   let editionCount = 1;
   let failedCount = 0;
   let abstractedIndexes = [];
   for (
     let i = network == NETWORK.sol ? 0 : 1;
-    i <= layerConfigurations[layerConfigurations.length - 1].growEditionSizeTo;
+    i <= layerConfigs[layerConfigs.length - 1].growEditionSizeTo;
     i++
   ) {
     abstractedIndexes.push(i);
@@ -348,12 +348,12 @@ const startCreating = async () => {
   debugLogs
     ? console.log("Editions left to create: ", abstractedIndexes)
     : null;
-  while (layerConfigIndex < layerConfigurations.length) {
+  while (layerConfigIndex < layerConfigs.length) {
     const layers = layersSetup(
-      layerConfigurations[layerConfigIndex].layersOrder
+      layerConfigs[layerConfigIndex].layersOrder
     );
     while (
-      editionCount <= layerConfigurations[layerConfigIndex].growEditionSizeTo
+      editionCount <= layerConfigs[layerConfigIndex].growEditionSizeTo
     ) {
       let newDna = createDna(layers);
       if (isDnaUnique(dnaList, newDna)) {
@@ -385,7 +385,7 @@ const startCreating = async () => {
             drawElement(
               renderObject,
               index,
-              layerConfigurations[layerConfigIndex].layersOrder.length
+              layerConfigs[layerConfigIndex].layersOrder.length
             );
             if (gif.export) {
               hashlipsGiffer.add();
@@ -398,7 +398,7 @@ const startCreating = async () => {
             ? console.log("Editions left to create: ", abstractedIndexes)
             : null;
           saveImage(abstractedIndexes[0]);
-          addMetadata(newDna, abstractedIndexes[0]);
+          addMetadata(newDna, abstractedIndexes[0], collectionDetails);
           saveMetaDataSingleFile(abstractedIndexes[0]);
           console.log(
             `Created edition: ${abstractedIndexes[0]}, with DNA: ${sha1(
@@ -414,7 +414,7 @@ const startCreating = async () => {
         failedCount++;
         if (failedCount >= uniqueDnaTorrance) {
           console.log(
-            `You need more layers or elements to grow your edition to ${layerConfigurations[layerConfigIndex].growEditionSizeTo} artworks!`
+            `You need more layers or elements to grow your edition to ${layerConfigs[layerConfigIndex].growEditionSizeTo} artworks!`
           );
           process.exit();
         }

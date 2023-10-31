@@ -1,5 +1,5 @@
 {
-  "name": "material-ui-nextjs-ts",
+  "name": "nft-collection-generator",
   "version": "5.0.0",
   "private": true,
   "scripts": {
@@ -16,18 +16,20 @@
     "@emotion/styled": "latest",
     "@mui/icons-material": "latest",
     "@mui/material": "latest",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
     "async-sema": "^3.1.1",
     "canvas": "^2.8.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
     "form-data": "^4.0.0",
     "gif-encoder-2": "^1.0.5",
+    "next": "latest",
     "node-fetch": "^2.6.6",
     "puppeteer": "^13.4.1",
     "puppeteer-extra": "^3.2.3",
     "puppeteer-extra-plugin-adblocker": "^2.12.0",
     "puppeteer-extra-plugin-stealth": "^2.9.0",
+    "react": "latest",
+    "react-dom": "latest",
     "sha1": "^1.1.1",
     "yesno": "^0.3.1"
   },
@@ -38,5 +40,6 @@
     "eslint": "latest",
     "eslint-config-next": "latest",
     "typescript": "latest"
-  }
+  },
+  "proxy": "http://localhost:4000"
 }
