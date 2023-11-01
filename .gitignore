@@ -12,6 +12,8 @@
 
 # production
 /build
+/layers
+/uploadedFiles
 
 # misc
 .DS_Store

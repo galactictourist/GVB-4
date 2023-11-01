@@ -4,7 +4,7 @@ const fs = require("fs");
 const sha1 = require(`sha1`);
 const { createCanvas, loadImage } = require(`canvas`);
 const buildDir = `${basePath}/build`;
-const layersDir = `${basePath}/src/generator/layers`;
+const layersDir = `${basePath}/layers`;
 const {
   format,
   baseUri,

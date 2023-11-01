@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <ThemeRegistry>
-        <AppBar position="fixed" sx={{ zIndex: 2000 }}>
+          <AppBar position="fixed" sx={{ zIndex: 2000 }}>
             <Toolbar sx={{ backgroundColor: 'background.paper', justifyContent: 'center' }}>
               <Typography variant="h6" color="text.primary">
                 {metadata.title}

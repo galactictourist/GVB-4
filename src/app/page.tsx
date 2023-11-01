@@ -6,15 +6,10 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Layer from "@/components/Core/Layer";
 import Button from "@mui/material/Button";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { rowStyle } from "../styles";
 import Note from "@/components/Core/Note";
-import {
-  VisuallyHiddenInput,
-  containerStyle,
-  contentStyle,
-  layerStyle,
-} from "./home.style";
+import { containerStyle, contentStyle, layerStyle } from "./home.style";
+import UploadZipButton from "@/components/Core/UploadZipButton";
 
 const NOTES = {
   COLLECTION: "Ensure the collection name is not already taken up on OpenSea.",
@@ -27,6 +22,7 @@ export default function HomePage() {
   const [collectionName, setCollectionName] = useState("");
   const [collectionDesc, setCollectionDesc] = useState("");
   const [nftAmount, setNftAmount] = useState("0");
+  const [zipFile, setZipFile] = useState<File | null>(null);
   const [layerNames, setLayerNames] = useState(["Background", ""]);
 
   const inputHandler = (index: number, value: string) => {
@@ -43,22 +39,26 @@ export default function HomePage() {
   const onGenerateHandler = async () => {
     const collectionDetails = {
       namePrefix: collectionName,
-      description: collectionDesc
+      description: collectionDesc,
     };
 
-    const layerConfigs = [{
-      growEditionSizeTo: +nftAmount,
-      layersOrder: layerNames.map(layer => ({name: layer}))
-    }]
-
-    const res = await fetch('http://localhost:4000/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const layerConfigs = [
+      {
+        growEditionSizeTo: +nftAmount,
+        layersOrder: layerNames.map((layer) => ({ name: layer })),
       },
-      body: JSON.stringify({collectionDetails, layerConfigs}),
-    })
-  }
+    ];
+
+    const formData = new FormData();
+    formData.append("zipFile", zipFile!);
+    formData.append("collectionDetails", JSON.stringify(collectionDetails));
+    formData.append("layerConfigs", JSON.stringify(layerConfigs));
+
+    const res = await fetch("http://localhost:4000/upload", {
+      method: "POST",
+      body: formData
+    });
+  };
 
   return (
     <Box sx={containerStyle}>
@@ -116,18 +116,24 @@ export default function HomePage() {
             <Button variant="contained" onClick={addHandler}>
               Add Layer
             </Button>
-            <Button
-              component="label"
-              variant="contained"
-              startIcon={<CloudUploadIcon />}
-            >
-              Upload Zip
-              <VisuallyHiddenInput type="file" />
-            </Button>
+            <UploadZipButton
+              onChangeHandler={(e) => setZipFile(e.target.files[0])}
+            />
           </Box>
           <Note description={NOTES.ZIP} />
         </Box>
-        <Button variant="contained" onClick={onGenerateHandler}>
+        <Button
+          variant="contained"
+          disabled={
+            !(collectionName !== "" &&
+            collectionDesc !== "" &&
+            !isNaN(+nftAmount) &&
+            +nftAmount > 0 &&
+            zipFile &&
+            layerNames.length >= 3)
+          }
+          onClick={onGenerateHandler}
+        >
           Generate
         </Button>
       </Box>
