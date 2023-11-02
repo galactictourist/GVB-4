@@ -59,7 +59,6 @@ export default function HomePage() {
 
     const url = process.env.NODE_ENV === "development" ? 
       process.env.DEV_BACKEND : process.env.PROD_BACKEND;
-
     const res = await fetch(`${url}/upload`, {
       method: "POST",
       body: data,

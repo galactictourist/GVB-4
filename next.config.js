@@ -22,7 +22,7 @@ const nextConfig = {
   },
   env: {
     PROD_BACKEND: 'https://nft-collection-generator-be.vercel.app',
-    DEV_BACKEND: '=http://localhost:4000',
+    DEV_BACKEND: 'http://localhost:4000',
   },
 };
 
