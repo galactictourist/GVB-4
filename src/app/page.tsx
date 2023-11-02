@@ -57,7 +57,10 @@ export default function HomePage() {
     data.append("collectionDetails", JSON.stringify(collectionDetails));
     data.append("layerConfigs", JSON.stringify(layerConfigs));
 
-    const res = await fetch("http://localhost:4000/upload", {
+    const url = process.env.NODE_ENV === "development" ? 
+      process.env.DEV_BACKEND : process.env.PROD_BACKEND;
+
+    const res = await fetch(`${url}/upload`, {
       method: "POST",
       body: data,
     });
@@ -147,7 +150,7 @@ export default function HomePage() {
         </Box>
         <Button
           variant="contained"
-          // disabled={formValidation(formData)}
+          disabled={formValidation(formData)}
           onClick={onGenerateHandler}
         >
           Generate

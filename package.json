@@ -3,13 +3,10 @@
   "version": "5.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"nodemon src/generator/index.js\"",
-    "prod": "concurrently \"next start\" \"node src/generator/index.js\"",
+    "dev": "NODE_ENV=development next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate": "node src/generator/generator.js",
-    "dev-server": "nodemon src/generator/index.js",
     "post-update": "echo \"codesandbox preview only, need an update\" && yarn upgrade --latest"
   },
   "dependencies": {
@@ -18,27 +15,9 @@
     "@emotion/styled": "latest",
     "@mui/icons-material": "latest",
     "@mui/material": "latest",
-    "adm-zip": "^0.5.10",
-    "async-sema": "^3.1.1",
-    "canvas": "^2.8.0",
-    "concurrently": "^8.2.2",
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "form-data": "^4.0.0",
-    "gif-encoder-2": "^1.0.5",
-    "multer": "^1.4.5-lts.1",
     "next": "latest",
-    "node-fetch": "^2.6.6",
-    "nodemon": "^3.0.1",
-    "puppeteer": "^13.4.1",
-    "puppeteer-extra": "^3.2.3",
-    "puppeteer-extra-plugin-adblocker": "^2.12.0",
-    "puppeteer-extra-plugin-stealth": "^2.9.0",
     "react": "latest",
-    "react-dom": "latest",
-    "rimraf": "^5.0.5",
-    "sha1": "^1.1.1",
-    "yesno": "^0.3.1"
+    "react-dom": "latest"
   },
   "devDependencies": {
     "@types/node": "latest",
@@ -48,8 +27,5 @@
     "eslint-config-next": "latest",
     "typescript": "latest"
   },
-  "proxy": "http://localhost:4000",
-  "nodemonConfig": {
-    "ignore": ["build", "files", "layers"] 
-  }
+  "proxy": "http://localhost:4000"
 }
