@@ -9,10 +9,11 @@ export interface Props {
   inputValue: string;
   sx: SxProps<Theme>;
   inputHandler: (e: any) => void;
+  name?: string;
   type?: string;
 }
 
-const InputRow = ({ label, inputValue, sx, inputHandler, type="string" }: Props) => {
+const InputRow = ({ label, inputValue, sx, inputHandler, name="", type="string" }: Props) => {
   return (
     <Box sx={rowStyle}>
       <Box sx={sx}>
@@ -21,6 +22,7 @@ const InputRow = ({ label, inputValue, sx, inputHandler, type="string" }: Props)
       <TextField
         sx={sx}
         id="standard-basic"
+        name={name}
         value={inputValue}
         variant="standard"
         onChange={inputHandler}

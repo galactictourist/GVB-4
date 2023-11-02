@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
@@ -12,6 +11,8 @@ import InputRow from "@/components/Core/InputRow";
 import Note from "@/components/Core/Note";
 import { containerStyle, contentStyle, layerStyle } from "./home.style";
 import { rowStyle } from "../styles";
+import { DEFAULT_FORMDATA, useForm } from "../hooks/useForm";
+import type { FormData } from '../hooks/useForm'
 
 const NOTES = {
   COLLECTION: "Ensure the collection name is not already taken up on OpenSea.",
@@ -20,40 +21,28 @@ const NOTES = {
   ZIP: "Zip file should contain folders named with the above layer names with images placed accordingly.",
 };
 
-const DEFAULT_LAYER_STATE = ["Background", ""];
-
 const inputStyleOne = { input: { textAlign: "left", width: "300px" } };
 const inputStyleTwo = { input: { textAlign: "center", width: "180px" } };
 
 export default function HomePage() {
-  const [collectionName, setCollectionName] = useState("");
-  const [collectionDesc, setCollectionDesc] = useState("");
-  const [nftAmount, setNftAmount] = useState("0");
-  const [zipFile, setZipFile] = useState<File | null>(null);
-  const [layerNames, setLayerNames] = useState(DEFAULT_LAYER_STATE);
+  const {
+    formData,
+    setFormData,
+    inputHandler,
+    layerInputHandler,
+    addHandler,
+    zipFileHandler,
+    error,
+    setError
+  } = useForm();
   const [linkValue, setLinkValue] = useState("");
-  const [helperText, setHelperText] = useState("");
-  const [error, setError] = useState(false);
-
-  const inputHandler = (index: number, value: string) => {
-    const layers = [...layerNames];
-    layers[index] = value;
-    setLayerNames(layers);
-  };
-
-  const addHandler = () => {
-    const layers = [...layerNames, ""];
-    setLayerNames(layers);
-  };
-
-  const zipFileHandler = (file: File) => {
-    setZipFile(file);
-  };
 
   const onGenerateHandler = async () => {
+    const {namePrefix, description, nftAmount, zipFile, layerNames} = formData;
+
     const collectionDetails = {
-      namePrefix: collectionName,
-      description: collectionDesc,
+      namePrefix,
+      description,
     };
 
     const layerConfigs = [
@@ -63,14 +52,14 @@ export default function HomePage() {
       },
     ];
 
-    const formData = new FormData();
-    formData.append("zipFile", zipFile!);
-    formData.append("collectionDetails", JSON.stringify(collectionDetails));
-    formData.append("layerConfigs", JSON.stringify(layerConfigs));
+    const data = new FormData();
+    data.append("zipFile", zipFile!);
+    data.append("collectionDetails", JSON.stringify(collectionDetails));
+    data.append("layerConfigs", JSON.stringify(layerConfigs));
 
     const res = await fetch("http://localhost:4000/upload", {
       method: "POST",
-      body: formData,
+      body: data,
     });
 
     if (res.status === 200) {
@@ -81,19 +70,26 @@ export default function HomePage() {
       setLinkValue(file);
     } else {
       setLinkValue("");
-      setHelperText(
-        "Please verified your inputs, layers and your layers zip file should match accordingly."
-      );
       setError(true);
     }
   };
 
+  const formValidation = (data: FormData) => {
+    const {namePrefix, description, nftAmount, zipFile, layerNames} = data;
+
+    return !(
+      namePrefix !== "" &&
+      description !== "" &&
+      !isNaN(+nftAmount) &&
+      +nftAmount > 0 &&
+      zipFile &&
+      layerNames.length >= 3 &&
+      layerNames.reduce((bool, val: string) => bool && val !== "", true)
+    )
+  }
+
   const reset = () => {
-    setCollectionName("");
-    setCollectionDesc("");
-    setNftAmount("0");
-    setLayerNames(DEFAULT_LAYER_STATE);
-    setZipFile(null);
+    setFormData(DEFAULT_FORMDATA);
     setLinkValue("");
   };
 
@@ -103,35 +99,38 @@ export default function HomePage() {
         <Box>
           <Typography variant="h6">Collection Details</Typography>
           <InputRow
+              name="namePrefix"
               label="Collection Name"
-              inputValue={collectionName}
+              inputValue={formData.namePrefix}
               sx={inputStyleOne}
-              inputHandler={(e) => setCollectionName(e.target.value)}
+              inputHandler={inputHandler}
             />
           <InputRow
+              name="description"
               label="Collection Description"
-              inputValue={collectionDesc}
+              inputValue={formData.description}
               sx={inputStyleOne}
-              inputHandler={(e) => setCollectionDesc(e.target.value)}
+              inputHandler={inputHandler}
             />
           <InputRow
+              name="nftAmount"
               label="Amount of NFT to generate"
-              inputValue={nftAmount}
+              inputValue={formData.nftAmount}
               sx={inputStyleTwo}
               type="number"
-              inputHandler={(e) => setNftAmount(e.target.value)}
+              inputHandler={inputHandler}
             />
           <Note description={NOTES.COLLECTION} />
         </Box>
         <Box sx={layerStyle}>
           <Typography variant="h6">Layers Naming</Typography>
-          {layerNames.map((layerName, i) => (
+          {formData.layerNames.map((layerName, i) => (
             <InputRow
               key={i}
               label={i === 0 ? `${layerName} Layer` : `Layer ${i + 1}`}
               inputValue={layerName}
               sx={inputStyleTwo}
-              inputHandler={(e: any) => inputHandler(i, e.target.value)}
+              inputHandler={(e: any) => layerInputHandler(i, e.target.value)}
             />
           ))}
           <Note description={NOTES.LAYERS} />
@@ -148,17 +147,7 @@ export default function HomePage() {
         </Box>
         <Button
           variant="contained"
-          disabled={
-            !(
-              collectionName !== "" &&
-              collectionDesc !== "" &&
-              !isNaN(+nftAmount) &&
-              +nftAmount > 0 &&
-              zipFile &&
-              layerNames.length >= 3 &&
-              layerNames.reduce((bool, val: string) => bool && val !== "", true)
-            )
-          }
+          // disabled={formValidation(formData)}
           onClick={onGenerateHandler}
         >
           Generate
@@ -168,12 +157,12 @@ export default function HomePage() {
             variant="contained"
             disabled={linkValue === ""}
             href={linkValue}
-            download={`${collectionName}.zip`}
+            download={`${formData.namePrefix}.zip`}
             onClick={reset}
           >
-            {linkValue === "" ? "Download ..." : `${collectionName}.zip`}
+            {linkValue === "" ? "Download ..." : `${formData.namePrefix}.zip`}
           </Button>
-          {error && <FormHelperText>{helperText}</FormHelperText>}
+          {error && <FormHelperText>Please verified your inputs, layers and your layers zip file should match accordingly.</FormHelperText>}
         </FormControl>
       </Box>
     </Box>
