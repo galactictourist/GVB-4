@@ -19,7 +19,11 @@ const nextConfig = {
   },
   compiler: {
     styledComponents: true
-  }
+  },
+  env: {
+    PROD_BACKEND: 'https://nft-collection-generator-be.vercel.app',
+    DEV_BACKEND: '=http://localhost:4000',
+  },
 };
 
 module.exports = nextConfig;
