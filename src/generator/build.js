@@ -1,10 +1,13 @@
 const basePath = process.cwd();
 const { NETWORK } = require(`./constants/network.js`);
 const fs = require("fs");
+const rimraf = require("rimraf");
+const AdmZip = require("adm-zip");
 const sha1 = require(`sha1`);
 const { createCanvas, loadImage } = require(`canvas`);
 const buildDir = `${basePath}/build`;
 const layersDir = `${basePath}/layers`;
+const filesDir = `${basePath}/files`;
 const {
   format,
   baseUri,
@@ -30,18 +33,19 @@ var attributesList = [];
 var dnaList = new Set();
 const DNA_DELIMITER = "-";
 const HashlipsGiffer = require(`./modules/HashlipsGiffer.js`);
+const { getRarity } = require('./utils/functions/getRarity_fromMetadata.js')
 
 let hashlipsGiffer = null;
 
-const buildSetup = (path = buildDir) => {
-  if (fs.existsSync(path)) {
-    fs.rmSync(path, { recursive: true });
+const buildSetup = () => {
+  if (fs.existsSync(buildDir)) {
+    fs.rmSync(buildDir, { recursive: true });
   }
-  fs.mkdirSync(path);
-  fs.mkdirSync(`${path}/json`);
-  fs.mkdirSync(`${path}/images`);
+  fs.mkdirSync(buildDir);
+  fs.mkdirSync(`${buildDir}/json`);
+  fs.mkdirSync(`${buildDir}/images`);
   if (gif.export) {
-    fs.mkdirSync(`${path}/gifs`);
+    fs.mkdirSync(`${buildDir}/gifs`);
   }
 };
 
@@ -131,13 +135,13 @@ const addMetadata = (_dna, _edition, collectionDetails) => {
     name: `${collectionDetails.namePrefix} #${_edition}`,
     description: collectionDetails.description,
     file_url: `${baseUri}/${_edition}.png`,
-    image: `${baseUri}/${_edition}.png`,
+    // image: `${baseUri}/${_edition}.png`,
     attributes: attributesList,
     custom_fields: {
       dna: sha1(_dna),
       edition: _edition,
       date: dateTime,
-      compiler: "HashLips Art Engine - codeSTACKr Modified",
+      // compiler: "HashLips Art Engine - codeSTACKr Modified",
     },
     ...extraMetadata,
   };
@@ -422,7 +426,21 @@ const startCreating = async (collectionDetails = {namePrefix, description}, laye
     }
     layerConfigIndex++;
   }
+
   writeMetaData(JSON.stringify(metadataList, null, 2));
+  getRarity();
 };
 
-module.exports = { startCreating, buildSetup, getElements };
+const deleteFiles = () => {
+  rimraf.sync(filesDir + "/*", {glob: true});
+  rimraf.sync(buildDir);
+  rimraf.sync(layersDir);
+}
+
+const createBuildZipFile = async (collectionName) => {
+  const zip = new AdmZip();
+  await zip.addLocalFolder(buildDir, "build");
+  await zip.writeZip(`${filesDir}/${collectionName}.zip`);
+};
+
+module.exports = { startCreating, buildSetup, getElements, deleteFiles, createBuildZipFile };

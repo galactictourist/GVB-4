@@ -62,4 +62,8 @@ function processRarity(nfts) {
   fs.writeFileSync(`${basePath}/build/json/_metadata_with_rarity.json`, JSON.stringify(nfts, null, 2));
 }
 
-getRarity();
+// getRarity();
+
+module.exports = {
+  getRarity
+}

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Button from "@mui/material/Button";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
@@ -15,14 +16,24 @@ const VisuallyHiddenInput = styled("input")({
   });
 
 interface Props {
-    onChangeHandler: (e: any) => void
+    onChangeHandler: (file: File) => void
 }
 
 const UploadZipButton = ({onChangeHandler}: Props) => {
+  const [value, setValue] = useState("")
+
+  const inputChangeHandler = (e: any) => {
+    const file = e.target.files[0];
+    if(file) {
+      setValue(file.name)
+      onChangeHandler(e.target.files[0]);
+    }
+  }
+
   return (
     <Button component="label" variant="contained" startIcon={<CloudUploadIcon />}>
-        Upload Zip
-        <VisuallyHiddenInput type="file" accept=".zip" onChange={onChangeHandler} />
+        {value === "" ? "Upload Zip" : value}
+        <VisuallyHiddenInput type="file" accept=".zip" onChange={inputChangeHandler} />
     </Button>
   );
 };

@@ -4,26 +4,33 @@ import { useState } from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import Layer from "@/components/Core/Layer";
 import Button from "@mui/material/Button";
-import { rowStyle } from "../styles";
+import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
+import UploadZipButton from "@/components/Core/UploadZipButton";
+import Layer from "@/components/Core/Layer";
 import Note from "@/components/Core/Note";
 import { containerStyle, contentStyle, layerStyle } from "./home.style";
-import UploadZipButton from "@/components/Core/UploadZipButton";
+import { rowStyle } from "../styles";
 
 const NOTES = {
   COLLECTION: "Ensure the collection name is not already taken up on OpenSea.",
   LAYERS:
-    "The above layers are ordered from botton to top. Each additional layer are layered on top of the existing layers.",
+    "The above layers are ordered from botton to top. Each additional layer are layered on top of the existing layers. There needs to be sufficient layers or items per layers for the generator to function.",
   ZIP: "Zip file should contain folders named with the above layer names with images placed accordingly.",
 };
+
+const DEFAULT_LAYER_STATE = ["Background", ""];
 
 export default function HomePage() {
   const [collectionName, setCollectionName] = useState("");
   const [collectionDesc, setCollectionDesc] = useState("");
   const [nftAmount, setNftAmount] = useState("0");
   const [zipFile, setZipFile] = useState<File | null>(null);
-  const [layerNames, setLayerNames] = useState(["Background", ""]);
+  const [layerNames, setLayerNames] = useState(DEFAULT_LAYER_STATE);
+  const [linkValue, setLinkValue] = useState("");
+  const [helperText, setHelperText] = useState("");
+  const [error, setError] = useState(false);
 
   const inputHandler = (index: number, value: string) => {
     const layers = [...layerNames];
@@ -34,6 +41,10 @@ export default function HomePage() {
   const addHandler = () => {
     const layers = [...layerNames, ""];
     setLayerNames(layers);
+  };
+
+  const zipFileHandler = (file: File) => {
+    setZipFile(file);
   };
 
   const onGenerateHandler = async () => {
@@ -56,8 +67,31 @@ export default function HomePage() {
 
     const res = await fetch("http://localhost:4000/upload", {
       method: "POST",
-      body: formData
+      body: formData,
     });
+
+    if (res.status === 200) {
+      const blob = await res.blob();
+      const file = URL.createObjectURL(
+        new Blob([blob], { type: "application/zip" })
+      );
+      setLinkValue(file);
+    } else {
+      setLinkValue("");
+      setHelperText(
+        "Please verified your inputs, layers and your layers zip file should match accordingly."
+      );
+      setError(true);
+    }
+  };
+
+  const reset = () => {
+    setCollectionName("");
+    setCollectionDesc("");
+    setNftAmount("0");
+    setLayerNames(DEFAULT_LAYER_STATE);
+    setZipFile(null);
+    setLinkValue("");
   };
 
   return (
@@ -116,26 +150,39 @@ export default function HomePage() {
             <Button variant="contained" onClick={addHandler}>
               Add Layer
             </Button>
-            <UploadZipButton
-              onChangeHandler={(e) => setZipFile(e.target.files[0])}
-            />
+            <UploadZipButton onChangeHandler={zipFileHandler} />
           </Box>
           <Note description={NOTES.ZIP} />
         </Box>
         <Button
           variant="contained"
           disabled={
-            !(collectionName !== "" &&
-            collectionDesc !== "" &&
-            !isNaN(+nftAmount) &&
-            +nftAmount > 0 &&
-            zipFile &&
-            layerNames.length >= 3)
+            !(
+              collectionName !== "" &&
+              collectionDesc !== "" &&
+              !isNaN(+nftAmount) &&
+              +nftAmount > 0 &&
+              zipFile &&
+              layerNames.length >= 3 &&
+              layerNames.reduce((bool, val: string) => bool && val !== "", true)
+            )
           }
           onClick={onGenerateHandler}
         >
           Generate
         </Button>
+        <FormControl error={error} variant="standard">
+          <Button
+            variant="contained"
+            disabled={linkValue === ""}
+            href={linkValue}
+            download={`${collectionName}.zip`}
+            onClick={reset}
+          >
+            {linkValue === "" ? "Download ..." : `${collectionName}.zip`}
+          </Button>
+          {error && <FormHelperText>{helperText}</FormHelperText>}
+        </FormControl>
       </Box>
     </Box>
   );

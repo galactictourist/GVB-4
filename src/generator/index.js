@@ -3,35 +3,62 @@ const cors = require("cors");
 const multer = require("multer");
 const app = express();
 const port = 4000;
-const upload = multer({ dest: "uploadedFiles" });
+const upload = multer({ dest: "files" });
 const AdmZip = require("adm-zip");
 
 const {
   startCreating,
   buildSetup,
-} = require(`${process.cwd()}/src/generator/build.js`);
+  deleteFiles,
+  createBuildZipFile,
+} = require(`./build.js`);
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/upload", upload.single("zipFile"), (req, res) => {
-  const zip = new AdmZip(req.file.path);
-  const zipEntries = zip.getEntries().filter(
-    (entry) =>
-      entry.entryName.match(/\.(png)$/i) &&
-      !entry.entryName.match(/MACOSX/i)
-  );
-  const collectionDetails = JSON.parse(req.body.collectionDetails);
-  const layerConfigs = JSON.parse(req.body.layerConfigs);
+app.post("/upload", upload.single("zipFile"), async (req, res) => {
+  try {
+    const collectionDetails = JSON.parse(req.body.collectionDetails);
+    const layerConfigs = JSON.parse(req.body.layerConfigs);
+    const zip = new AdmZip(req.file.path);
 
-  zipEntries.forEach(function (zipEntry) {
-    zip.extractEntryTo(zipEntry.entryName.toString(), "layers");
-  });
+    const zipEntries = await new Promise(async (resolve) => {
+      resolve(
+        zip
+          .getEntries()
+          .filter(
+            (entry) =>
+              entry.entryName.match(/\.(png)$/i) &&
+              !entry.entryName.match(/MACOSX/i)
+          )
+      );
+    });
 
-  buildSetup();
-  startCreating(collectionDetails, layerConfigs);
-  res.sendStatus(200);
+    await Promise.all(
+      zipEntries.map((zipEntry) =>
+        zip.extractEntryTo(zipEntry.entryName.toString(), "layers")
+      )
+    );
+
+    // Generating
+    buildSetup();
+    await startCreating(collectionDetails, layerConfigs);
+    await createBuildZipFile(collectionDetails.namePrefix);
+
+    res.status(200).sendFile(
+      `${process.cwd()}/files/${collectionDetails.namePrefix}.zip`,
+      (err) => {
+        if (!err) {
+          // Delete build, layers & uploadFiles
+          deleteFiles();
+        }
+      }
+    );
+  } catch (error) {
+    deleteFiles();
+    res.sendStatus(500);
+  }
 });
 
 app.listen(port, () => {
