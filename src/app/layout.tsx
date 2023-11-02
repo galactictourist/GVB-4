@@ -16,8 +16,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeRegistry>
           <AppBar position="fixed" sx={{ zIndex: 2000 }}>
-            <Toolbar sx={{ backgroundColor: 'background.paper', justifyContent: 'center' }}>
-              <Typography variant="h6" color="text.primary">
+            <Toolbar sx={{ justifyContent: 'center' }}>
+              <Typography variant="h6" color="text.default">
                 {metadata.title}
               </Typography>
             </Toolbar>

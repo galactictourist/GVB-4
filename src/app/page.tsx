@@ -8,7 +8,7 @@ import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
 import UploadZipButton from "@/components/Core/UploadZipButton";
-import Layer from "@/components/Core/Layer";
+import InputRow from "@/components/Core/InputRow";
 import Note from "@/components/Core/Note";
 import { containerStyle, contentStyle, layerStyle } from "./home.style";
 import { rowStyle } from "../styles";
@@ -21,6 +21,9 @@ const NOTES = {
 };
 
 const DEFAULT_LAYER_STATE = ["Background", ""];
+
+const inputStyleOne = { input: { textAlign: "left", width: "300px" } };
+const inputStyleTwo = { input: { textAlign: "center", width: "180px" } };
 
 export default function HomePage() {
   const [collectionName, setCollectionName] = useState("");
@@ -99,46 +102,35 @@ export default function HomePage() {
       <Box sx={contentStyle}>
         <Box>
           <Typography variant="h6">Collection Details</Typography>
-          <Box sx={rowStyle}>
-            <Typography>Collection Name:</Typography>
-            <TextField
-              sx={{ input: { textAlign: "left", width: "300px" } }}
-              id="standard-basic"
-              value={collectionName}
-              variant="standard"
-              onChange={(e) => setCollectionName(e.target.value)}
+          <InputRow
+              label="Collection Name"
+              inputValue={collectionName}
+              sx={inputStyleOne}
+              inputHandler={(e) => setCollectionName(e.target.value)}
             />
-          </Box>
-          <Box sx={rowStyle}>
-            <Typography>Collection Description:</Typography>
-            <TextField
-              sx={{ input: { textAlign: "left", width: "300px" } }}
-              id="standard-basic"
-              value={collectionDesc}
-              variant="standard"
-              onChange={(e) => setCollectionDesc(e.target.value)}
+          <InputRow
+              label="Collection Description"
+              inputValue={collectionDesc}
+              sx={inputStyleOne}
+              inputHandler={(e) => setCollectionDesc(e.target.value)}
             />
-          </Box>
-          <Box sx={rowStyle}>
-            <Typography>Amount of NFT to generate:</Typography>
-            <TextField
-              sx={{ input: { textAlign: "center" } }}
-              id="standard-basic"
-              value={nftAmount}
-              variant="standard"
+          <InputRow
+              label="Amount of NFT to generate"
+              inputValue={nftAmount}
+              sx={inputStyleTwo}
               type="number"
-              onChange={(e) => setNftAmount(e.target.value)}
+              inputHandler={(e) => setNftAmount(e.target.value)}
             />
-          </Box>
           <Note description={NOTES.COLLECTION} />
         </Box>
         <Box sx={layerStyle}>
           <Typography variant="h6">Layers Naming</Typography>
           {layerNames.map((layerName, i) => (
-            <Layer
+            <InputRow
               key={i}
               label={i === 0 ? `${layerName} Layer` : `Layer ${i + 1}`}
               inputValue={layerName}
+              sx={inputStyleTwo}
               inputHandler={(e: any) => inputHandler(i, e.target.value)}
             />
           ))}
