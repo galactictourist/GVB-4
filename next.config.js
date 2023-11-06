@@ -21,7 +21,7 @@ const nextConfig = {
     styledComponents: true
   },
   env: {
-    PROD_BACKEND: 'http://146.190.92.219:4000',
+    PROD_BACKEND: 'https://nft-generator-akbg.onrender.com',
     DEV_BACKEND: 'http://localhost:4000',
   },
 };
