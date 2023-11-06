@@ -16,24 +16,15 @@ const VisuallyHiddenInput = styled("input")({
   });
 
 interface Props {
-    onChangeHandler: (file: File) => void
+    file: string
+    onChangeHandler: (e: any) => void
 }
 
-const UploadZipButton = ({onChangeHandler}: Props) => {
-  const [value, setValue] = useState("")
-
-  const inputChangeHandler = (e: any) => {
-    const file = e.target.files[0];
-    if(file) {
-      setValue(file.name)
-      onChangeHandler(e.target.files[0]);
-    }
-  }
-
+const UploadZipButton = ({file, onChangeHandler}: Props) => {
   return (
     <Button component="label" variant="contained" startIcon={<CloudUploadIcon />}>
-        {value === "" ? "Upload Zip" : value}
-        <VisuallyHiddenInput type="file" accept=".zip" onChange={inputChangeHandler} />
+        {file === "" ? "Upload Zip" : file}
+        <VisuallyHiddenInput type="file" accept=".zip" onChange={onChangeHandler} />
     </Button>
   );
 };

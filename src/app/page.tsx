@@ -36,6 +36,15 @@ export default function HomePage() {
     setError
   } = useForm();
   const [linkValue, setLinkValue] = useState("");
+  const [zipFile, setZipfile] = useState("")
+
+  const uploadChangeHandler = (e: any) => {
+    const file = e.target.files[0];
+    if(file) {
+      setZipfile(file.name)
+      zipFileHandler(e.target.files[0]);
+    }
+  }
 
   const onGenerateHandler = async () => {
     const {namePrefix, description, nftAmount, zipFile, layerNames} = formData;
@@ -92,6 +101,7 @@ export default function HomePage() {
 
   const reset = () => {
     setFormData(DEFAULT_FORMDATA);
+    setZipfile("");
     setLinkValue("");
   };
 
@@ -143,7 +153,7 @@ export default function HomePage() {
             <Button variant="contained" onClick={addHandler}>
               Add Layer
             </Button>
-            <UploadZipButton onChangeHandler={zipFileHandler} />
+            <UploadZipButton file={zipFile} onChangeHandler={uploadChangeHandler} />
           </Box>
           <Note description={NOTES.ZIP} />
         </Box>
