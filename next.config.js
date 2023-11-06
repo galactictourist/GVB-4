@@ -21,7 +21,7 @@ const nextConfig = {
     styledComponents: true
   },
   env: {
-    PROD_BACKEND: 'https://nft-collection-generator-be.vercel.app',
+    PROD_BACKEND: 'http://146.190.92.219:4000/',
     DEV_BACKEND: 'http://localhost:4000',
   },
 };
