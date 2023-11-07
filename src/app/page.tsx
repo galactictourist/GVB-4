@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Box from "@mui/material/Box";
+import CircularProgress from '@mui/material/CircularProgress';
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
@@ -37,6 +38,7 @@ export default function HomePage() {
   } = useForm();
   const [linkValue, setLinkValue] = useState("");
   const [zipFile, setZipfile] = useState("")
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const uploadChangeHandler = (e: any) => {
     const file = e.target.files[0];
@@ -50,14 +52,14 @@ export default function HomePage() {
     const {namePrefix, description, nftAmount, zipFile, layerNames} = formData;
 
     const collectionDetails = {
-      namePrefix,
-      description,
+      namePrefix: namePrefix.trim(),
+      description: description.trim(),
     };
 
     const layerConfigs = [
       {
         growEditionSizeTo: +nftAmount,
-        layersOrder: layerNames.map((layer) => ({ name: layer })),
+        layersOrder: layerNames.map((layer) => ({ name: layer.trim() })),
       },
     ];
 
@@ -65,6 +67,7 @@ export default function HomePage() {
     data.append("zipFile", zipFile!);
     data.append("collectionDetails", JSON.stringify(collectionDetails));
     data.append("layerConfigs", JSON.stringify(layerConfigs));
+    setIsGenerating(true);
 
     const url = process.env.NODE_ENV === "development" ? 
       process.env.DEV_BACKEND : process.env.PROD_BACKEND;
@@ -73,12 +76,14 @@ export default function HomePage() {
       body: data,
     });
 
+    setIsGenerating(false);
     if (res.status === 200) {
       const blob = await res.blob();
       const file = URL.createObjectURL(
         new Blob([blob], { type: "application/zip" })
       );
       setLinkValue(file);
+
     } else {
       setLinkValue("");
       setError(true);
@@ -172,7 +177,8 @@ export default function HomePage() {
             download={`${formData.namePrefix}.zip`}
             onClick={reset}
           >
-            {linkValue === "" ? "Download ..." : `${formData.namePrefix}.zip`}
+            {isGenerating && <CircularProgress size={24} />}
+            {!isGenerating && (linkValue === "" ? "Download ..." : `${formData.namePrefix}.zip`)}
           </Button>
           {error && <FormHelperText>Please verified your inputs, layers and your layers zip file should match accordingly.</FormHelperText>}
         </FormControl>
