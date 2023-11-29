@@ -1,76 +1,75 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
-import CircularProgress from '@mui/material/CircularProgress';
+import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
-import UploadZipButton from "@/components/Core/UploadZipButton";
-import InputRow from "@/components/Core/InputRow";
 import Note from "@/components/Core/Note";
-import { containerStyle, contentStyle, layerStyle } from "./home.style";
-import { rowStyle } from "../styles";
-import { DEFAULT_FORMDATA, useForm } from "../hooks/useForm";
-import type { FormData } from '../hooks/useForm'
-
-const NOTES = {
-  COLLECTION: "Ensure the collection name is not already taken up on OpenSea.",
-  LAYERS:
-    "The above layers are ordered from botton to top. Each additional layer are layered on top of the existing layers. There needs to be sufficient layers or items per layers for the generator to function.",
-  ZIP: "Zip file should contain folders named with the above layer names with images placed accordingly.",
-};
-
-const inputStyleOne = { input: { textAlign: "left", width: "300px" } };
-const inputStyleTwo = { input: { textAlign: "center", width: "180px" } };
+import styles from "./home.style";
+import UploadFileButton from "@/components/Core/UploadFileButton";
+import { useParseCsv } from "@/handlers/useParseCsv";
+import { ERRORS, NOTES } from "./constants";
+import { useParseZip } from "@/handlers/useParseZip";
+import Layer from "@/types/layer";
+import {
+  CollectionSchema,
+  CollectionInput,
+  defaultCollectionState,
+} from "@/schemas/Collection.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import InputRow from "@/components/Core/InputRow";
+import Stack from "@mui/material/Stack";
 
 export default function HomePage() {
   const {
-    formData,
-    setFormData,
-    inputHandler,
-    layerInputHandler,
-    addHandler,
-    zipFileHandler,
-    error,
-    setError
-  } = useForm();
-  const [linkValue, setLinkValue] = useState("");
-  const [zipFile, setZipfile] = useState("")
-  const [isGenerating, setIsGenerating] = useState(false)
+    watch,
+    reset,
+    control,
+  } = useForm<CollectionInput>({
+    defaultValues: defaultCollectionState,
+    resolver: zodResolver(CollectionSchema),
+  });
+  const namePrefix = watch("namePrefix");
+  const description = watch("description");
+  const amount = watch("amount");
 
-  const uploadChangeHandler = (e: any) => {
-    const file = e.target.files[0];
-    if(file) {
-      setZipfile(file.name)
-      zipFileHandler(e.target.files[0]);
-    }
-  }
+  const { parseCsv } = useParseCsv();
+  const { parseZip } = useParseZip();
+  const [linkValue, setLinkValue] = useState("");
+  const [zipFile, setZipfile] = useState<File | null>(null);
+  const [csvFile, setCsvfile] = useState<File | null>(null);
+  const [layers, setLayers] = useState<Layer[]>([]);
+  const [processedZipFile, setProcessedZipfile] = useState<File | null>(null);
+
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingErrors, setProcessingErrors] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isApiError, setIsApiError] = useState(false);
 
   const onGenerateHandler = async () => {
-    const {namePrefix, description, nftAmount, zipFile, layerNames} = formData;
+    setIsGenerating(true);
 
-    const collectionDetails = {
-      namePrefix: namePrefix.trim(),
-      description: description.trim(),
-    };
-
+    const collectionDetails = { namePrefix, description };
     const layerConfigs = [
       {
-        growEditionSizeTo: +nftAmount,
-        layersOrder: layerNames.map((layer) => ({ name: layer.trim() })),
+        growEditionSizeTo: amount,
+        layersOrder: layers.map((layer) => ({ name: layer.name })),
       },
     ];
 
     const data = new FormData();
-    data.append("zipFile", zipFile!);
+    data.append("zipFile", processedZipFile!);
     data.append("collectionDetails", JSON.stringify(collectionDetails));
     data.append("layerConfigs", JSON.stringify(layerConfigs));
-    setIsGenerating(true);
 
-    const url = process.env.NODE_ENV === "development" ? 
-      process.env.DEV_BACKEND : process.env.PROD_BACKEND;
+    const url =
+      process.env.NODE_ENV === "development"
+        ? process.env.DEV_BACKEND
+        : process.env.PROD_BACKEND;
     const res = await fetch(`${url}/upload`, {
       method: "POST",
       body: data,
@@ -83,104 +82,172 @@ export default function HomePage() {
         new Blob([blob], { type: "application/zip" })
       );
       setLinkValue(file);
-
     } else {
       setLinkValue("");
-      setError(true);
+      setIsApiError(true);
     }
   };
 
-  const formValidation = (data: FormData) => {
-    const {namePrefix, description, nftAmount, zipFile, layerNames} = data;
-
+  const formValidation = () => {
     return !(
       namePrefix !== "" &&
       description !== "" &&
-      !isNaN(+nftAmount) &&
-      +nftAmount > 0 &&
-      zipFile &&
-      layerNames.length >= 3 &&
-      layerNames.reduce((bool, val: string) => bool && val !== "", true)
-    )
-  }
+      amount > 0 &&
+      processedZipFile &&
+      layers.length > 0
+    );
+  };
 
-  const reset = () => {
-    setFormData(DEFAULT_FORMDATA);
-    setZipfile("");
+  const calculateTotal = (layers: Layer[]) => {
+    if (layers.length === 0) {
+      return 0;
+    }
+
+    return layers.reduce((count, layer) => count * layer.count, 1);
+  };
+
+  const resetState = () => {
+    reset();
+    setZipfile(null);
+    setCsvfile(null);
     setLinkValue("");
   };
 
-  return (
-    <Box sx={containerStyle}>
-      <Box sx={contentStyle}>
-        <Box>
-          <Typography variant="h6">Collection Details</Typography>
-          <InputRow
-              name="namePrefix"
-              label="Collection Name"
-              inputValue={formData.namePrefix}
-              sx={inputStyleOne}
-              inputHandler={inputHandler}
-            />
-          <InputRow
-              name="description"
-              label="Collection Description"
-              inputValue={formData.description}
-              sx={inputStyleOne}
-              inputHandler={inputHandler}
-            />
-          <InputRow
-              name="nftAmount"
-              label="Amount of NFT to generate"
-              inputValue={formData.nftAmount}
-              sx={inputStyleTwo}
-              type="number"
-              inputHandler={inputHandler}
-            />
-          <Note description={NOTES.COLLECTION} />
-        </Box>
-        <Box sx={layerStyle}>
-          <Typography variant="h6">Layers Naming</Typography>
-          {formData.layerNames.map((layerName, i) => (
-            <InputRow
-              key={i}
-              label={i === 0 ? `${layerName} Layer` : `Layer ${i + 1}`}
-              inputValue={layerName}
-              sx={inputStyleTwo}
-              inputHandler={(e: any) => layerInputHandler(i, e.target.value)}
-            />
-          ))}
-          <Note description={NOTES.LAYERS} />
-        </Box>
+  const processImages = async () => {
+    try {
+      if (csvFile && zipFile) {
+        setIsProcessing(true);
+        const records = await parseCsv(csvFile);
+        const data = await parseZip(zipFile, records);
 
-        <Box>
-          <Box sx={rowStyle}>
-            <Button variant="contained" onClick={addHandler}>
-              Add Layer
-            </Button>
-            <UploadZipButton file={zipFile} onChangeHandler={uploadChangeHandler} />
+        if (data) {
+          setLayers(data.layers);
+          setProcessedZipfile(data.file);
+          setIsProcessing(false);
+        }
+      }
+    } catch (error) {
+      setIsProcessing(false);
+      setProcessingErrors(true);
+    }
+  };
+
+  useEffect(() => {
+    processingErrors && setProcessingErrors(false);
+  }, [zipFile, csvFile]);
+
+  return (
+    <Box sx={styles.containerStyle}>
+      <Box sx={styles.contentStyle}>
+        <Box sx={styles.flexColStyle}>
+          <Typography variant="h6">File Uploads</Typography>
+          <Box sx={styles.uploadBoxStyle}>
+            <UploadFileButton
+              fileName={csvFile ? csvFile.name : "Upload CSV"}
+              fileType=".csv"
+              onChangeHandler={(file: File) => setCsvfile(file)}
+            />
+            <UploadFileButton
+              fileName={zipFile ? zipFile.name : "Upload Zip"}
+              fileType=".zip"
+              onChangeHandler={(file: File) => setZipfile(file)}
+            />
           </Box>
-          <Note description={NOTES.ZIP} />
+          <Note description={NOTES.UPLOADS} />
+          <Box>
+            <Button
+              sx={styles.fullWidthStyle}
+              color="success"
+              variant="contained"
+              disabled={!(csvFile && zipFile)}
+              onClick={processImages}
+            >
+              {!isProcessing && "Process Images"}
+              {isProcessing && (
+                <Stack sx={{ color: "white" }}>
+                  <CircularProgress size={24} color="inherit" />
+                </Stack>
+              )}
+            </Button>
+            {processingErrors && (
+              <FormHelperText error>{ERRORS.PROCESSING}</FormHelperText>
+            )}
+          </Box>
         </Box>
-        <Button
-          variant="contained"
-          disabled={formValidation(formData)}
-          onClick={onGenerateHandler}
-        >
-          Generate
-        </Button>
-        <FormControl error={error} variant="standard">
-          <Button
-            variant="contained"
-            disabled={linkValue === ""}
-            href={linkValue}
-            download={`${formData.namePrefix}.zip`}
-            onClick={reset}
-          >
-            {isGenerating && <CircularProgress size={24} />}
-            {!isGenerating && (linkValue === "" ? "Download ..." : `${formData.namePrefix}.zip`)}
-          </Button>
-          {error && <FormHelperText>Please verified your inputs, layers and your layers zip file should match accordingly.</FormHelperText>}
+        <FormControl sx={styles.flexColStyle} variant="standard">
+          <Box sx={styles.flexColStyle}>
+            <Typography variant="h6">Collection Details</Typography>
+            <Box>
+              <InputRow
+                sx={styles.inputStyleOne}
+                label="Collection Name"
+                fieldName="namePrefix"
+                control={control}
+              />
+              <InputRow
+                sx={styles.inputStyleOne}
+                label="Collection Description"
+                fieldName="description"
+                control={control}
+              />
+              <InputRow
+                sx={styles.inputStyleTwo}
+                label="Amount of NFT to generate"
+                fieldName="amount"
+                control={control}
+              />
+              <Note
+                description={`Total number of possible combinations: ${calculateTotal(
+                  layers
+                )}`}
+              />
+            </Box>
+            <Note description={NOTES.COLLECTION} />
+          </Box>
+          <Box sx={styles.flexColStyle}>
+            <Typography variant="h6">Layers</Typography>
+            <Box>
+              {layers.length === 0 && (
+                <Typography>Files have not been uploaded yet.</Typography>
+              )}
+              {layers.length > 0 &&
+                layers.map((layer, i) => (
+                  <Box key={i} sx={styles.rowStyle}>
+                    <Typography>
+                      Layer {i + 1}: {layer.name}
+                    </Typography>
+                    <Typography>{layer.count} images</Typography>
+                  </Box>
+                ))}
+            </Box>
+          </Box>
+          <Box sx={styles.flexColStyle}>
+            <Button
+              sx={styles.fullWidthStyle}
+              variant="contained"
+              disabled={formValidation()}
+              onClick={onGenerateHandler}
+            >
+              Generate
+            </Button>
+            <Box>
+              <Button
+                sx={styles.fullWidthStyle}
+                variant="contained"
+                disabled={linkValue === ""}
+                href={linkValue}
+                download={`${namePrefix}.zip`}
+                onClick={resetState}
+              >
+                {isGenerating && <CircularProgress size={24} />}
+                {!isGenerating &&
+                  (linkValue === "" ? "Download ..." : `${namePrefix}.zip`)}
+              </Button>
+              {isApiError && (
+                <FormHelperText error>{ERRORS.GENERATE}</FormHelperText>
+              )}
+            </Box>
+          </Box>
         </FormControl>
       </Box>
     </Box>

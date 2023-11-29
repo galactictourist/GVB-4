@@ -13,13 +13,16 @@
     "@emotion/cache": "latest",
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
+    "@hookform/resolvers": "^3.3.2",
     "@mui/icons-material": "latest",
     "@mui/material": "latest",
     "csv-parse": "^5.5.2",
     "jszip": "^3.10.1",
     "next": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "react-hook-form": "^7.48.2",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "latest",

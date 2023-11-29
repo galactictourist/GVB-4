@@ -1,5 +1,5 @@
-export default interface Record {
-  Layer: string;
-  Trait: string;
-  weight: string;
+export default interface Records {
+    layer: string
+    trait: string
+    ordered: string
 }

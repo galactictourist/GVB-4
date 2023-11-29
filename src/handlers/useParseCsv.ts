@@ -1,58 +1,64 @@
 import { parse } from "csv-parse";
 import Record from "@/types/record";
-import Layer from "@/types/layer";
-
-interface LayerCount {
-  [key: string]: number;
-}
-
-interface CSVData {
-  records: Record[],
-  layers: Layer[]
-}
+import LayerInfo from "@/types/layerInfo";
 
 export const useParseCsv = () => {
-  const parseCsv =  (file: File): Promise<CSVData> => {
+  const parseCsv = (file: File): Promise<LayerInfo[]> => {
     return new Promise((resolve, reject) => {
       try {
         const reader = new FileReader();
         reader.readAsBinaryString(file);
-      
+
         reader.onload = () => {
-          console.log({result: reader.result})
           if (reader.result) {
-            parse(reader.result.toString(), { columns: true }, (err, records) => {
-              const layers = _readLayers(records);
-              resolve({records, layers});
-            });
+            parse(
+              reader.result.toString(),
+              { columns: true },
+              (err, records) => {
+                const layers = _processLayers(records);
+                resolve(layers);
+              }
+            );
           }
         };
       } catch (error) {
         reject(error);
       }
-    })
+    });
   };
 
-  const _readLayers = (records: Record[]) => {
-    const layersCount: LayerCount  = {};
+  const _processLayers = (records: Record[]): LayerInfo[] => {
+    const layers: LayerInfo[] = [];
+    let layerInfo: LayerInfo = {
+      name: "",
+      priorityType: "",
+      traits: [],
+    };
 
-    records.forEach(record => {
-      const property = record["Layer"];
+    records.forEach((record, i) => {
+      const { layer, trait, ordered } = record;
 
-      if(!layersCount.hasOwnProperty(property)) {
-        layersCount[property] = 0;
+      if (layerInfo.name !== layer && ordered) {
+        if (layerInfo.name !== "") {
+          layers.push(layerInfo);
+        }
+
+        layerInfo = {
+          name: layer,
+          priorityType: ordered.toLowerCase(),
+          traits: [],
+        };
       }
 
-      layersCount[property] += 1;
+      if (layer && trait) {
+        layerInfo.traits.push(trait);
+      }
     });
 
-    return Object.keys(layersCount).map(layer => ({
-      name: layer,
-      count: layersCount[layer]
-    }));
+    return layers;
   };
 
   return {
-    parseCsv
+    parseCsv,
   };
 };

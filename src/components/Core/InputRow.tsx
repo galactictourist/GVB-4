@@ -1,33 +1,30 @@
 import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { rowStyle } from "../../styles";
-import { SxProps, Theme } from "@mui/material";
+import styles from "@/app/home.style";
+import { SxProps, TextField, Theme } from "@mui/material";
+import { Control, Controller } from "react-hook-form";
+import { CollectionInput } from "@/schemas/Collection.schema";
 
 export interface Props {
-  label: string;
-  inputValue: string;
-  sx: SxProps<Theme>;
-  inputHandler: (e: any) => void;
-  name?: string;
-  type?: string;
+  sx: SxProps<Theme>
+  label: string
+  fieldName: "namePrefix" | "description" | "amount"
+  control: Control<CollectionInput>
 }
 
-const InputRow = ({ label, inputValue, sx, inputHandler, name="", type="string" }: Props) => {
+const InputRow = ({ sx, label, fieldName, control }: Props) => {
   return (
-    <Box sx={rowStyle}>
+    <Box sx={styles.rowStyle}>
       <Box sx={sx}>
         <Typography>{label}:</Typography>
       </Box>
-      <TextField
-        sx={sx}
-        id="standard-basic"
-        name={name}
-        value={inputValue}
-        variant="standard"
-        onChange={inputHandler}
-        type={type}
-      />
+      <Controller
+          name={fieldName}
+          control={control}
+          render={({ field }) => (
+            <TextField sx={sx} id="standard-basic" variant="standard" {...field} />
+          )}
+        />
     </Box>
   );
 };
