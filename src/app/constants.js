@@ -7,5 +7,6 @@ export const NOTES = {
 };
 
 export const ERRORS = {
-    PROCESSING: "Processing error, please verify your files."
+    PROCESSING: "Processing error, please verify your files.",
+    GENERATE: "Please verified your inputs, layers and your layers zip file should match accordingly."
 }
