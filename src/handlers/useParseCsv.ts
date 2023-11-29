@@ -55,6 +55,8 @@ export const useParseCsv = () => {
       }
     });
 
+    layers.push(layerInfo);
+
     return layers;
   };
 
